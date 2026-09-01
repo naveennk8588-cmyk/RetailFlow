@@ -1,7 +1,7 @@
 import axios from "axios";
 
 const api = axios.create({
-  baseURL: "http://127.0.0.1:8000/api/",
+  baseURL: "https://retailflow-backend-bmbe.onrender.com/api/",
   headers: {
     "Content-Type": "application/json",
   },
@@ -9,8 +9,7 @@ const api = axios.create({
 
 
 // =====================================================
-// REQUEST INTERCEPTOR
-// Attach access token to every API request
+// ATTACH JWT ACCESS TOKEN
 // =====================================================
 
 api.interceptors.request.use(
@@ -33,8 +32,7 @@ api.interceptors.request.use(
 
 
 // =====================================================
-// RESPONSE INTERCEPTOR
-// Refresh access token when it expires
+// REFRESH ACCESS TOKEN
 // =====================================================
 
 api.interceptors.response.use(
@@ -48,7 +46,6 @@ api.interceptors.response.use(
       error.config;
 
 
-    // Only handle 401
     if (
       error.response?.status !== 401 ||
       !originalRequest
@@ -57,7 +54,6 @@ api.interceptors.response.use(
     }
 
 
-    // Don't retry the refresh endpoint itself
     if (
       originalRequest.url?.includes(
         "accounts/token/refresh/"
@@ -79,7 +75,6 @@ api.interceptors.response.use(
     }
 
 
-    // Prevent infinite retry loop
     if (originalRequest._retry) {
 
       localStorage.removeItem(
@@ -106,7 +101,6 @@ api.interceptors.response.use(
       );
 
 
-    // No refresh token
     if (!refreshToken) {
 
       localStorage.removeItem(
@@ -122,13 +116,16 @@ api.interceptors.response.use(
 
     try {
 
-      // Request a new access token
       const response =
         await axios.post(
-          "http://127.0.0.1:8000/api/accounts/token/refresh/",
+
+          "https://retailflow-backend-bmbe.onrender.com/api/accounts/token/refresh/",
+
           {
-            refresh: refreshToken,
+            refresh:
+              refreshToken,
           }
+
         );
 
 
@@ -136,23 +133,23 @@ api.interceptors.response.use(
         response.data.access;
 
 
-      // Save new token
       localStorage.setItem(
         "accessToken",
         newAccessToken
       );
 
 
-      // Update original request
       originalRequest.headers =
         originalRequest.headers || {};
+
 
       originalRequest.headers.Authorization =
         `Bearer ${newAccessToken}`;
 
 
-      // Retry original API request
-      return api(originalRequest);
+      return api(
+        originalRequest
+      );
 
     } catch (refreshError) {
 
@@ -162,7 +159,6 @@ api.interceptors.response.use(
       );
 
 
-      // Refresh token expired/invalid
       localStorage.removeItem(
         "accessToken"
       );
@@ -179,7 +175,9 @@ api.interceptors.response.use(
       return Promise.reject(
         refreshError
       );
+
     }
+
   }
 );
 

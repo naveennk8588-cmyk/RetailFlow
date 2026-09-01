@@ -1,63 +1,121 @@
 import { useState } from "react";
 import { useNavigate, Link } from "react-router-dom";
-import axios from "axios";
 
-const API = "http://127.0.0.1:8000/api";
+import api from "../api/axios";
+
 
 function Register() {
-  const navigate = useNavigate();
 
-  const [form, setForm] = useState({
-    username: "",
-    email: "",
-    password: "",
-    confirmPassword: "",
-  });
+  const navigate =
+    useNavigate();
 
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState("");
-  const [success, setSuccess] = useState("");
+
+  const [form, setForm] =
+    useState({
+      username: "",
+      email: "",
+      password: "",
+      confirmPassword: "",
+    });
+
+
+  const [loading, setLoading] =
+    useState(false);
+
+  const [error, setError] =
+    useState("");
+
+  const [success, setSuccess] =
+    useState("");
+
+
+  /* =====================================================
+     INPUT CHANGE
+  ===================================================== */
 
   const handleChange = (e) => {
-    const { name, value } = e.target;
+
+    const {
+      name,
+      value,
+    } = e.target;
+
 
     setForm((prev) => ({
       ...prev,
       [name]: value,
     }));
+
   };
 
+
+  /* =====================================================
+     REGISTER
+  ===================================================== */
+
   const handleSubmit = async (e) => {
+
     e.preventDefault();
 
     setError("");
     setSuccess("");
 
-    if (form.password !== form.confirmPassword) {
-      setError("Passwords do not match.");
+
+    /* Password match */
+
+    if (
+      form.password !==
+      form.confirmPassword
+    ) {
+
+      setError(
+        "Passwords do not match."
+      );
+
       return;
+
     }
 
-    if (form.password.length < 6) {
-      setError("Password must be at least 6 characters.");
+
+    /* Minimum password length */
+
+    if (
+      form.password.length < 6
+    ) {
+
+      setError(
+        "Password must be at least 6 characters."
+      );
+
       return;
+
     }
+
 
     try {
+
       setLoading(true);
 
-      await axios.post(
-        `${API}/accounts/register/`,
+
+      await api.post(
+        "accounts/register/",
         {
-          username: form.username,
-          email: form.email,
-          password: form.password,
+          username:
+            form.username.trim(),
+
+          email:
+            form.email.trim(),
+
+          password:
+            form.password,
         }
       );
+
 
       setSuccess(
         "Registration successful. Redirecting to login..."
       );
+
 
       setForm({
         username: "",
@@ -66,50 +124,107 @@ function Register() {
         confirmPassword: "",
       });
 
+
       setTimeout(() => {
-        navigate("/login", { replace: true });
-      }, 1200);
-    } catch (err) {
-      console.error("Registration error:", err);
 
-      if (err.response?.data) {
-        const data = err.response.data;
-
-        if (data.username) {
-          setError(
-            `Username: ${data.username.join(", ")}`
-          );
-        } else if (data.email) {
-          setError(
-            `Email: ${data.email.join(", ")}`
-          );
-        } else if (data.password) {
-          setError(
-            `Password: ${data.password.join(", ")}`
-          );
-        } else {
-          setError(
-            "Registration failed. Please check your details."
-          );
-        }
-      } else {
-        setError(
-          "Unable to connect to Django backend."
+        navigate(
+          "/login",
+          {
+            replace: true,
+          }
         );
+
+      }, 1200);
+
+
+    } catch (err) {
+
+      console.error(
+        "Registration error:",
+        err
+      );
+
+
+      const data =
+        err.response?.data;
+
+
+      if (
+        data?.username
+      ) {
+
+        setError(
+          `Username: ${data.username.join(", ")}`
+        );
+
+      } else if (
+        data?.email
+      ) {
+
+        setError(
+          `Email: ${data.email.join(", ")}`
+        );
+
+      } else if (
+        data?.password
+      ) {
+
+        setError(
+          `Password: ${data.password.join(", ")}`
+        );
+
+      } else if (
+        data?.detail
+      ) {
+
+        setError(
+          data.detail
+        );
+
+      } else if (
+        err.response
+      ) {
+
+        setError(
+          "Registration failed. Please check your details."
+        );
+
+      } else {
+
+        setError(
+          "Unable to connect to the server. Please try again."
+        );
+
       }
+
     } finally {
+
       setLoading(false);
+
     }
+
   };
 
+
+  /* =====================================================
+     UI
+  ===================================================== */
+
   return (
+
     <div className="auth-page">
 
       <div className="auth-card">
 
+
+        {/* LOGO */}
+
         <div className="auth-logo">
           🛒
         </div>
+
+
+        {/* TITLE */}
 
         <h1>
           Create Account
@@ -120,7 +235,16 @@ function Register() {
         </p>
 
 
-        <form onSubmit={handleSubmit}>
+        {/* FORM */}
+
+        <form
+          onSubmit={
+            handleSubmit
+          }
+        >
+
+
+          {/* USERNAME */}
 
           <div className="auth-field">
 
@@ -131,8 +255,12 @@ function Register() {
             <input
               type="text"
               name="username"
-              value={form.username}
-              onChange={handleChange}
+              value={
+                form.username
+              }
+              onChange={
+                handleChange
+              }
               placeholder="Enter username"
               autoComplete="username"
               required
@@ -140,6 +268,8 @@ function Register() {
 
           </div>
 
+
+          {/* EMAIL */}
 
           <div className="auth-field">
 
@@ -150,8 +280,12 @@ function Register() {
             <input
               type="email"
               name="email"
-              value={form.email}
-              onChange={handleChange}
+              value={
+                form.email
+              }
+              onChange={
+                handleChange
+              }
               placeholder="Enter email"
               autoComplete="email"
               required
@@ -159,6 +293,8 @@ function Register() {
 
           </div>
 
+
+          {/* PASSWORD */}
 
           <div className="auth-field">
 
@@ -169,8 +305,12 @@ function Register() {
             <input
               type="password"
               name="password"
-              value={form.password}
-              onChange={handleChange}
+              value={
+                form.password
+              }
+              onChange={
+                handleChange
+              }
               placeholder="Minimum 6 characters"
               autoComplete="new-password"
               required
@@ -178,6 +318,8 @@ function Register() {
 
           </div>
 
+
+          {/* CONFIRM PASSWORD */}
 
           <div className="auth-field">
 
@@ -188,8 +330,12 @@ function Register() {
             <input
               type="password"
               name="confirmPassword"
-              value={form.confirmPassword}
-              onChange={handleChange}
+              value={
+                form.confirmPassword
+              }
+              onChange={
+                handleChange
+              }
               placeholder="Confirm password"
               autoComplete="new-password"
               required
@@ -198,44 +344,67 @@ function Register() {
           </div>
 
 
+          {/* ERROR */}
+
           {error && (
+
             <div className="auth-error">
               ⚠ {error}
             </div>
+
           )}
 
 
+          {/* SUCCESS */}
+
           {success && (
+
             <div className="auth-success">
               ✓ {success}
             </div>
+
           )}
 
+
+          {/* REGISTER BUTTON */}
 
           <button
             type="submit"
             className="auth-submit"
-            disabled={loading}
+            disabled={
+              loading
+            }
           >
+
             {loading
               ? "Creating Account..."
               : "Register"}
+
           </button>
 
         </form>
 
 
+        {/* LOGIN LINK */}
+
         <div className="auth-link">
+
           Already have an account?{" "}
+
           <Link to="/login">
             Login
           </Link>
+
         </div>
+
 
       </div>
 
     </div>
+
   );
+
 }
+
 
 export default Register;

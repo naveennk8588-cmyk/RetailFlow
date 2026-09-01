@@ -1,8 +1,8 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import axios from "axios";
 
-const API = "http://127.0.0.1:8000/api";
+import api from "../api/axios";
+
 
 function Login() {
   const navigate = useNavigate();
@@ -15,26 +15,50 @@ function Login() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
 
+
+  /* =====================================================
+     INPUT CHANGE
+  ===================================================== */
+
   const handleChange = (e) => {
-    const { name, value } = e.target;
+
+    const {
+      name,
+      value,
+    } = e.target;
 
     setForm((prev) => ({
       ...prev,
       [name]: value,
     }));
+
   };
 
+
+  /* =====================================================
+     LOGIN
+  ===================================================== */
+
   const handleSubmit = async (e) => {
+
     e.preventDefault();
 
     try {
+
       setLoading(true);
       setError("");
 
-      const response = await axios.post(
-        `${API}/accounts/login/`,
-        form
+
+      const response = await api.post(
+        "accounts/login/",
+        {
+          username: form.username.trim(),
+          password: form.password,
+        }
       );
+
+
+      /* SAVE JWT TOKENS */
 
       localStorage.setItem(
         "accessToken",
@@ -46,32 +70,76 @@ function Login() {
         response.data.refresh
       );
 
-      navigate("/dashboard", {
-        replace: true,
-      });
-    } catch (err) {
-      console.error("Login error:", err);
 
-      if (err.response?.data?.detail) {
-        setError(err.response.data.detail);
-      } else {
+      /* REDIRECT */
+
+      navigate(
+        "/dashboard",
+        {
+          replace: true,
+        }
+      );
+
+    } catch (err) {
+
+      console.error(
+        "Login error:",
+        err
+      );
+
+
+      if (
+        err.response?.data?.detail
+      ) {
+
+        setError(
+          err.response.data.detail
+        );
+
+      } else if (
+        err.response?.status === 401
+      ) {
+
         setError(
           "Invalid username or password."
         );
+
+      } else {
+
+        setError(
+          "Unable to connect to the server. Please try again."
+        );
+
       }
+
     } finally {
+
       setLoading(false);
+
     }
+
   };
 
+
+  /* =====================================================
+     UI
+  ===================================================== */
+
   return (
+
     <div className="auth-page">
 
       <div className="auth-card">
 
+
+        {/* LOGO */}
+
         <div className="auth-logo">
           🛒
         </div>
+
+
+        {/* TITLE */}
 
         <h1>
           Welcome Back
@@ -82,7 +150,16 @@ function Login() {
         </p>
 
 
-        <form onSubmit={handleSubmit}>
+        {/* FORM */}
+
+        <form
+          onSubmit={
+            handleSubmit
+          }
+        >
+
+
+          {/* USERNAME */}
 
           <div className="auth-field">
 
@@ -93,8 +170,12 @@ function Login() {
             <input
               type="text"
               name="username"
-              value={form.username}
-              onChange={handleChange}
+              value={
+                form.username
+              }
+              onChange={
+                handleChange
+              }
               placeholder="Enter username"
               autoComplete="username"
               required
@@ -102,6 +183,8 @@ function Login() {
 
           </div>
 
+
+          {/* PASSWORD */}
 
           <div className="auth-field">
 
@@ -112,8 +195,12 @@ function Login() {
             <input
               type="password"
               name="password"
-              value={form.password}
-              onChange={handleChange}
+              value={
+                form.password
+              }
+              onChange={
+                handleChange
+              }
               placeholder="Enter password"
               autoComplete="current-password"
               required
@@ -122,29 +209,57 @@ function Login() {
           </div>
 
 
+          {/* ERROR */}
+
           {error && (
+
             <div className="auth-error">
               ⚠ {error}
             </div>
+
           )}
 
+
+          {/* LOGIN BUTTON */}
 
           <button
             type="submit"
             className="auth-submit"
-            disabled={loading}
+            disabled={
+              loading
+            }
           >
+
             {loading
               ? "Logging in..."
               : "Login"}
+
           </button>
 
         </form>
 
+
+        {/* REGISTER LINK */}
+
+        <div className="auth-link">
+
+          Don't have an account?{" "}
+
+          <a
+            href="/register"
+          >
+            Register
+          </a>
+
+        </div>
+
+
       </div>
 
     </div>
+
   );
 }
+
 
 export default Login;
